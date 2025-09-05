@@ -1,5 +1,5 @@
 import Schedule from "../models/schedule.model.js";
-import { generateSchedule } from "../middleware/geminiservice.js";
+import { generateSchedule } from "../middleware/geminiService.js";
 
 export const createSchedule = async (req, res) => {
   try {
