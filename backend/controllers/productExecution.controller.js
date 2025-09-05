@@ -1,10 +1,5 @@
 import ProductExecution from "../models/productExecution.model.js";
-import { gatewayTokenGenerator } from "../middleware/gatewayTokenGenerator.js";
-import axios from "axios";
-import  Order  from "../models/order.model.js";
-import { generateResponse } from "../middleware/geminiservice.js";
 import mongoose from "mongoose";
-import Product from "../models/product.model.js";
 
 // Create a new Product Execution
 export const createProductExecution = async (req, res) => {

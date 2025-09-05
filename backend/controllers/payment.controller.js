@@ -4,7 +4,7 @@ import Order from "../models/order.model.js"
 import OrderTracker from "../models/orderTracker.model.js";
 import { gatewayTokenGenerator } from "../middleware/gatewayTokenGenerator.js";
 import axios from "axios";
-import { generateResponse } from "../middleware/geminiservice.js";
+import { generateResponse } from "../middleware/geminiService.js";
 import ProductExecution from "../models/productExecution.model.js";
 import mongoose from "mongoose";
 import RawMaterial from "../models/rawMaterial.model.js";
