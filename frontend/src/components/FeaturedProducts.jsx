@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCartStore } from "../stores/useCartStore";
 
-const FeaturedProducts = ({ featuredProducts }) => {
+const FeaturedProducts = ({ featuredProducts = [] }) => {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [itemsPerPage, setItemsPerPage] = useState(4);
 
@@ -30,7 +30,10 @@ const FeaturedProducts = ({ featuredProducts }) => {
 	};
 
 	const isStartDisabled = currentIndex === 0;
-	const isEndDisabled = currentIndex >= featuredProducts.length - itemsPerPage;
+	const isEndDisabled =
+  !featuredProducts || featuredProducts.length === 0
+    ? true
+    : currentIndex >= featuredProducts.length - itemsPerPage;
 
 	return (
 		<div className='py-12'>
@@ -42,7 +45,8 @@ const FeaturedProducts = ({ featuredProducts }) => {
 							className='flex transition-transform duration-300 ease-in-out'
 							style={{ transform: `translateX(-${currentIndex * (100 / itemsPerPage)}%)` }}
 						>
-							{featuredProducts?.map((product) => (
+							{featuredProducts && featuredProducts.length > 0 ? (
+  								featuredProducts.map((product) => (
 								<div key={product._id} className='w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-2'>
 									<div className='bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden h-full transition-all duration-300 hover:shadow-xl border border-emerald-500/30 flex flex-col'>
 										<div className='overflow-hidden'>
@@ -68,7 +72,10 @@ const FeaturedProducts = ({ featuredProducts }) => {
 										</div>
 									</div>
 								</div>
-							))}
+							  ))
+							) : (
+							<p className='text-center text-gray-400'>No featured products available.</p>
+							)}
 						</div>
 					</div>
 					<button
