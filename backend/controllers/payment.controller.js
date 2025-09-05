@@ -98,7 +98,7 @@ export const stripeCheckoutSession = async (req, res) => {
           ]
         : [],
       metadata: {
-        userId: req.user._id.toString(),
+        userId: req.user?._id?.toString() || "",
         customerName: shippingAddress?.name || "Unknown Customer", // ✅ Added customer name
         couponCode: couponCode || "",
         subTotal: subTotal / 100,
