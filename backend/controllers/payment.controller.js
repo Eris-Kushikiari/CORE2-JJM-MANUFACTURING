@@ -319,48 +319,6 @@ Output format:
       ""
     );
 
-    // 🔹 Integrating Finance System
-    try {
-      const token = gatewayTokenGenerator();
-      const payload = {
-        orderNumber: newOrder._id.toString(),
-        customerId: newOrder.user.toString(),
-        customerName: newOrder.shippingAddress.name,
-        orders: products.map((product) => ({
-          itemName: product.name,
-          quantity: product.quantity,
-          price: product.price,
-        })),
-        paymentMethod: newOrder.paymentMethod,
-        contactInformation: cleanPhoneNumber,
-        shippingMethod: newOrder.shippingMethod,
-        deliveryDate: new Date(new Date().setDate(new Date().getDate() + 3))
-          .toISOString()
-          .slice(0, 10),
-        customerAddress: newOrder.shippingAddress.city,
-        orderDate: newOrder.createdAt.toISOString().slice(0, 10),
-      };
-
-      console.log("Sending to Finance:", payload);
-
-      const financeResponse = await axios.post(
-        `${process.env.API_GATEWAY_URL}/finance/order-information`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      console.log("✅ Order sent to Finance:", financeResponse.data);
-    } catch (financeError) {
-      console.error("❌ Error sending order to Finance:", financeError.message);
-      return res.status(500).json({
-        message: "Error sending order to Finance",
-        error: financeError.message,
-      });
-    }
-    
-
     res.status(201).json({
       success: true,
       message:
