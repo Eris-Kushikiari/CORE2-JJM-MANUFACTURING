@@ -4,7 +4,7 @@ const axiosInstance = axios.create({
   baseURL:
     import.meta.env.MODE === "development"
       ? "http://localhost:7684/api"
-      : "https://backend-core2.jjm-manufacturing.com/api",
+      : "https://core-2-jjm-manufacturing.vercel.app/api",
   withCredentials: true,
 });
 

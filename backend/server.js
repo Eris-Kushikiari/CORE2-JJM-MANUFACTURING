@@ -74,7 +74,7 @@ const app = express({ limit:"10mb" })
 const PORT = process.env.PORT || 7684
 
 const allowedOrigins = [
-  "https://core2.jjm-manufacturing.com",
+  "https://core-2-jjm-manufacturing-rgjr.vercel.app",
   "http://localhost:5173", // Keep this for local development
 ];
 // Create HTTP Server for WebSockets
@@ -82,7 +82,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
-      "https://core2.jjm-manufacturing.com",
+      "https://core-2-jjm-manufacturing-rgjr.vercel.app",
       "http://localhost:5173", // Keep this for local development
     ],
     methods: ["GET", "POST",],
