@@ -14,9 +14,11 @@ const MyPurchasePage = () => {
         fetchAllOrder();
     }, [fetchAllOrder]);
 
-      if (loading) {
-		return <div><LoadingSpinner/></div>;
-	}
+    
+
+    if (loading) {
+        return <div className="text-center text-gray-500 mt-20"><LoadingSpinner/></div>;
+    }
 
   return (
     <>
@@ -26,9 +28,7 @@ const MyPurchasePage = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
         >
-        {loading ? (
-                 <div className="text-center text-gray-500 mt-20"><LoadingSpinner/></div>
-            ) :orders.length === 0 ? (
+            {orders.length === 0 ? (
                 <EmptyOrdersUi />
             ) : (
                 <div className='min-h-screen py-10'>
@@ -55,7 +55,10 @@ const MyPurchasePage = () => {
                                             <button
                                                 type='button'
                                                 className='border-gray-300 border py-2 px-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium text-sm'
-                                                onClick={() => updateStatus(order._id, "Canceled")}
+                                                onClick={async () => {
+                                                    await updateStatus(order._id, "Canceled");
+                                                    await fetchAllOrder(); 
+                                                }}
                                             >
                                                 Cancel Order
                                             </button>

@@ -98,30 +98,33 @@ export const useOrderStore = create((set) => ({
     }
   },
 
-  updateStatus: async (orderId, status) => {
-    set({ loading: true, error: null });
-    if (!orderId || !status) {
-      console.error("Missing orderId or status", { orderId, status });
-      toast.error("Invalid order update request.");
-      return;
-    }
+updateStatus: async (orderId, status) => {
+  set({ loading: true, error: null });
+  if (!orderId || !status) {
+    console.error("Missing orderId or status", { orderId, status });
+    toast.error("Invalid order update request.");
+    set({ loading: false }); // ✅ reset
+    return;
+  }
 
-    try {
-      const response = await axios.put(`/orders/${orderId}/status`, { status });
+  try {
+    const response = await axios.put(`/orders/${orderId}/status`, { status });
 
-      // Update orders in state immediately
-      set((state) => ({
-        orders: state.orders.map((order) =>
-          order._id === orderId
-            ? { ...order, status: response.data.status }
-            : order
-        ),
-      }));
+    // ✅ Update orders in state immediately
+    set((state) => ({
+      orders: state.orders.map((order) =>
+        order._id === orderId
+          ? { ...order, status: response.data.status }
+          : order
+      ),
+      loading: false, // ✅ reset
+    }));
 
-      toast.success("Order status updated!");
-    } catch (error) {
-      console.error("Error updating order status:", error);
-      toast.error("Failed to update order status.");
-    }
-  },
+    toast.success("Order status updated!");
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    toast.error("Failed to update order status.");
+    set({ loading: false }); // ✅ reset
+  }
+},
 }));
