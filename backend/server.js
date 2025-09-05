@@ -77,6 +77,14 @@ const allowedOrigins = [
   "https://core-2-jjm-manufacturing-rgjr.vercel.app",
   "http://localhost:5173", // Keep this for local development
 ];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: "GET,POST,PUT,DELETE,PATCH",
+    credentials: true,
+  })
+);
 // Create HTTP Server for WebSockets
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -137,13 +145,6 @@ setInterval(() => {
 
 const __dirname = path.resolve()
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    methods: "GET,POST,PUT,DELETE,PATCH",
-    credentials: true,
-  })
-);
 
 app.use(express.json({limit: "10mb"}))
 app.use(cookieParser())
@@ -203,13 +204,13 @@ app.use("/api/auditSchedule", auditScheduleRoutes)
 
 app.use("/api/testing", testing)
 
-if(process.env.NODE_ENV === "production") {
+{if(process.env.NODE_ENV === "production") {
     app.use(express.static(path.join(__dirname, "/frontend/dist")))
 
     app.get("*", (req, res) =>{
         res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"))
     })
-}
+}}
 
 server.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
