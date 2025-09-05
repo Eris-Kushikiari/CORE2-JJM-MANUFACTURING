@@ -81,12 +81,9 @@ const allowedOrigins = [
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [
-      "https://core-2-jjm-manufacturing-rgjr.vercel.app",
-      "http://localhost:5173", // Keep this for local development
-    ],
-    methods: ["GET", "POST",],
-    credentials: true
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -123,6 +120,19 @@ io.on("connection", (socket) => {
     console.log("A user disconnected:", socket.id);
   });
 });
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 
 app.use((req, res, next) => {
   req.io = io;
