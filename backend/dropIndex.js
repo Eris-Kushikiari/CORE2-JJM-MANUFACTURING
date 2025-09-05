@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Order from "./backend/models/order.model.js"; // Adjust the path if needed
+import Order from "./models/order.model.js"; // Adjust the path if needed
 import dotenv from "dotenv";
 dotenv.config();
 
