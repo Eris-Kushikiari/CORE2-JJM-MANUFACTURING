@@ -467,160 +467,101 @@ export const checkoutSuccess = async (req, res) => {
 
     await newOrderTracker.save();
 
-    // 🔹 **Trigger AI to Generate Work Order**
-try {
-  // Fetch all raw materials from the database
-  const allMaterials = await RawMaterial.find();
+    // 🔹 Generate Work Order via AI
+    try {
+      const allMaterials = await RawMaterial.find();
 
-  if (!allMaterials.length) {
-    throw new Error("❌ No raw materials found in the database.");
-  }
+      if (!allMaterials.length) {
+        throw new Error("❌ No raw materials found in the database.");
+      }
 
-  const prompt = `
+      const prompt = `
 Generate a work order for the following order:
 - Order ID: ${newOrder._id}
 - Products: ${products
-    .map((p) => `${p.name} (ID: ${p.id}, Quantity: ${p.quantity})`)
-    .join(", ")}
+          .map((p) => `${p.name} (ID: ${p.id}, Quantity: ${p.quantity})`)
+          .join(", ")}
 - Assign to one of these machines: Machine A, Machine B, Machine C, Machine D
 - Include required materials
 - Set status to 'Pending'
 
-Respond only with a valid JSON object. Do not include any extra text.
+Respond only with a valid JSON object.
+      `;
 
-Output format:
-{
-  "workOrders": [
-    {
-      "orderId": "Order ID",
-      "dueDate": "YYYY-MM-DD",
-      "productName": "Product Name",
-      "productId": "Product ID",
-      "quantity": "Product Quantity",
-      "assignedTo": "Machine A/B/C/D",
-      "materials": [
-        {"materialName": "Material 1", "quantity": Quantity},
-        {"materialName": "Material 2", "quantity": Quantity}
-      ],
-      "status": "Pending"
-    }
-  ]
-}
-  `;
+      const aiResponse = await generateResponse(prompt);
 
-  const aiResponse = await generateResponse(prompt);
+      const jsonStart = aiResponse.indexOf("{");
+      const jsonEnd = aiResponse.lastIndexOf("}");
+      if (jsonStart === -1 || jsonEnd === -1) {
+        throw new Error("AI response does not contain valid JSON.");
+      }
 
-  // 🔹 Extract JSON from AI Response
-  const jsonStart = aiResponse.indexOf("{");
-  const jsonEnd = aiResponse.lastIndexOf("}");
+      const jsonString = aiResponse.substring(jsonStart, jsonEnd + 1);
+      let workOrderData;
 
-  if (jsonStart === -1 || jsonEnd === -1) {
-    throw new Error("AI response does not contain valid JSON.");
-  }
+      try {
+        workOrderData = JSON.parse(jsonString);
+      } catch (jsonError) {
+        console.error("❌ Invalid JSON from AI:", aiResponse);
+        throw new Error("Failed to parse AI response as JSON.");
+      }
 
-  const jsonString = aiResponse.substring(jsonStart, jsonEnd + 1);
+      if (
+        !Array.isArray(workOrderData.workOrders) ||
+        workOrderData.workOrders.length === 0
+      ) {
+        throw new Error("Invalid work orders format received from AI.");
+      }
 
-  let workOrderData;
-  try {
-    workOrderData = JSON.parse(jsonString);
-  } catch (jsonError) {
-    console.error("❌ Invalid JSON received from AI:", aiResponse);
-    throw new Error("Failed to parse AI response as JSON.");
-  }
-
-  if (
-    !Array.isArray(workOrderData.workOrders) ||
-    workOrderData.workOrders.length === 0
-  ) {
-    throw new Error("Invalid work orders format received from AI.");
-  }
-
-  for (const workOrderItem of workOrderData.workOrders) {
-    if (!workOrderItem.productName || !workOrderItem.quantity) {
-      console.error("❌ Missing required fields in work order:", workOrderItem);
-      continue; // Skip invalid work order
-    }
-
-    // 🔹 Check if work order already exists
-    const existingWorkOrder = await ProductExecution.findOne({
-      orderId: workOrderItem.orderId,
-      productId: workOrderItem.productId,
-    });
-
-    if (existingWorkOrder) {
-      console.log(
-        `🔹 Work order for ${workOrderItem.productName} already exists. Skipping.`
-      );
-      continue; // Skip duplicate
-    }
-
-    // 🛠 **Select 2-4 Random Raw Materials**
-    const randomMaterials = allMaterials
-      .sort(() => 0.5 - Math.random()) // Shuffle array
-      .slice(0, Math.floor(Math.random() * 3) + 2) // Pick 2-4 materials
-      .map((material) => ({
-        materialId: material._id, // Ensure materialId is included
-        materialName: material.materialName,
-        quantity: Math.floor(Math.random() * 10) + 1, // Random quantity (1-10)
-      }));
-
-    console.log("🔹 Selected Random Materials:", randomMaterials);
-
-    // 🔹 Create and Save Work Order
-    const workOrder = new ProductExecution({
-      orderId: newOrder._id,
-      dueDate: new Date(workOrderItem.dueDate),
-      productName: workOrderItem.productName,
-      productId: new mongoose.Types.ObjectId(workOrderItem.productId),
-      quantity: workOrderItem.quantity,
-      assignedTo: workOrderItem.assignedTo,
-      materials: randomMaterials, // Assign random materials
-      status: "Pending",
-    });
-
-    await workOrder.save();
-    console.log("✅ AI-generated Work Order saved:", workOrder);
-  }
-} catch (aiError) {
-  console.error("❌ Error generating work order with AI:", aiError.message);
-}
-
-    //Sending the Data to finance
-    try {
-      const token = gatewayTokenGenerator();
-      const financeResponse = await axios.post(
-        `${process.env.API_GATEWAY_URL}/finance/order-information`,
-        {
-          orderNumber: newOrder._id,
-          customerId: userId,
-          customerName,
-          orders: products.map((product) => ({
-            itemName: product.name,
-            quantity: product.quantity,
-            price: product.price,
-          })),
-          paymentMethod: "Gcash",
-          contactInformation: newOrder.shippingAddress.phone,
-          orderDate: newOrder.createdAt.toISOString().slice(0, 10),
-          shippingMethod,
-          deliveryDate: formattedDeliveryDate.toISOString().slice(0, 10),
-          customerAddress: newOrder.shippingAddress.city,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
+      for (const workOrderItem of workOrderData.workOrders) {
+        if (!workOrderItem.productName || !workOrderItem.quantity) {
+          console.error("❌ Missing fields in work order:", workOrderItem);
+          continue;
         }
-      );
 
-      console.log(" Order sent to Finance:", financeResponse.data);
-    } catch (financeError) {
-      console.error(" Error sending order to Finance:", financeError.message);
+        const existingWorkOrder = await ProductExecution.findOne({
+          orderId: workOrderItem.orderId,
+          productId: workOrderItem.productId,
+        });
+
+        if (existingWorkOrder) {
+          console.log(
+            `🔹 Work order for ${workOrderItem.productName} already exists. Skipping.`
+          );
+          continue;
+        }
+
+        const randomMaterials = allMaterials
+          .sort(() => 0.5 - Math.random())
+          .slice(0, Math.floor(Math.random() * 3) + 2)
+          .map((material) => ({
+            materialId: material._id,
+            materialName: material.materialName,
+            quantity: Math.floor(Math.random() * 10) + 1,
+          }));
+
+        const workOrder = new ProductExecution({
+          orderId: newOrder._id,
+          dueDate: new Date(workOrderItem.dueDate),
+          productName: workOrderItem.productName,
+          productId: new mongoose.Types.ObjectId(workOrderItem.productId),
+          quantity: workOrderItem.quantity,
+          assignedTo: workOrderItem.assignedTo,
+          materials: randomMaterials,
+          status: "Pending",
+        });
+
+        await workOrder.save();
+        console.log("✅ AI-generated Work Order saved:", workOrder);
+      }
+    } catch (aiError) {
+      console.error("❌ Error generating work order with AI:", aiError.message);
     }
-    
 
     res.status(200).json({
       success: true,
       message:
-        "Payment successful, order created, sent to finance, and order tracker initialized.",
+        "Payment successful, order created, and order tracker initialized.",
       orderId: newOrder._id,
       orderTrackerId: newOrderTracker._id,
       shippingMethod,
@@ -628,13 +569,14 @@ Output format:
       orderDate: newOrder.createdAt.toISOString().slice(0, 10),
     });
   } catch (error) {
-    console.error(" Error in checkoutSuccess:", error.message);
+    console.error("❌ Error in checkoutSuccess:", error.message);
     res.status(500).json({
       message: "Error processing successful checkout",
       error: error.message,
     });
   }
 };
+
 
 
 
