@@ -25,21 +25,24 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export const generateResponse = async (prompt) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Correct model
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
+      generationConfig: {
+        responseMimeType: "application/json", // force JSON output
+      },
     });
-    
 
-    // Check for valid response
+    const result = await model.generateContent(prompt);
+
     if (!result || !result.response) throw new Error("Invalid API response");
 
-    return result.response.text(); // Correct output
+    return result.response.text(); // should now be raw JSON
   } catch (error) {
     console.error("❌ Error generating AI response:", error.message);
-    return "AI response failed."; // Prevent invalid JSON
+    return "{}"; // return empty JSON to avoid crashes
   }
 };
+
 
 export const generateSchedule = async (taskName, deadline, priority) => {
   try {
