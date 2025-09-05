@@ -89,7 +89,10 @@ app.use(
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: [
+      "https://core-2-jjm-manufacturing-rgjr.vercel.app",
+      "http://localhost:5173", // Keep this for local development
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
