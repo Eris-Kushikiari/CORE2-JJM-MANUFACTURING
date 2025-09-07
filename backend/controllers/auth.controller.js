@@ -32,13 +32,13 @@ const storeRefreshToken = async (userId, refreshToken) => {
 const setCookies = (res, accessToken, refreshToken) => {
   res.cookie("accessToken", accessToken, {
     httpOnly: true, // prevent XSS attacks, cross site scripting attack
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "none", 
     maxAge: 15 * 60 * 1000, // 15 minutes
   });
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true, // prevent XSS attacks, cross site scripting attack
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "none", 
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
@@ -324,14 +324,26 @@ export const logout = async (req, res) => {
     }
 
     // Always clear cookies, even if token verification failed
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+    });
+
     res.json({ message: "Logged out successfully" });
   } catch (error) {
     console.log("Error in logout controller", error.message);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
 // Improved refresh token endpoint
 export const refreshToken = async (req, res) => {
   try {
