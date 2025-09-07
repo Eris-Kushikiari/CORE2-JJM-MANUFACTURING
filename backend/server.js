@@ -73,6 +73,8 @@ scheduleMaintenanceJob();
 const app = express({ limit:"10mb" })
 const PORT = process.env.PORT || 7684
 
+app.set("trust proxy", 1);
+
 const allowedOrigins = [
   "https://core-2-jjm-manufacturing-rgjr.vercel.app",
   "http://localhost:5173", // Keep this for local development
@@ -81,6 +83,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: allowedOrigins,
+    methods: "GET,POST,PUT,DELETE,PATCH",
     credentials: true,
   })
 );

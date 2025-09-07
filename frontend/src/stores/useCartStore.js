@@ -56,29 +56,39 @@ export const useCartStore = create((set, get) => ({
       console.error("Error clearing cart:", error);
     }
   },
-  addToCart: async (product) => {
-    try {
-      await axios.post("/cart", { productId: product._id });
-      toast.success("Product added to cart");
+  
+addToCart: async (product) => {
+  set({ loading: true, error: null });
+  try {
+    await axios.post("/cart", { productId: product._id });
+    toast.success("Product added to cart");
 
-      set((prevState) => {
-        const existingItem = prevState.cart.find(
-          (item) => item._id === product._id
-        );
-        const newCart = existingItem
-          ? prevState.cart.map((item) =>
-              item._id === product._id
-                ? { ...item, quantity: item.quantity + 1 }
-                : item
-            )
-          : [...prevState.cart, { ...product, quantity: 1 }];
-        return { cart: newCart };
-      });
-      get().calculateTotals();
-    } catch (error) {
-      toast.error(error.response.data.message || "An error occurred");
+    set((prevState) => {
+      const existingItem = prevState.cart.find(
+        (item) => item._id === product._id
+      );
+      const newCart = existingItem
+        ? prevState.cart.map((item) =>
+            item._id === product._id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          )
+        : [...prevState.cart, { ...product, quantity: 1 }];
+
+      return { cart: newCart, loading: false }; // ✅ stop loading here
+    });
+
+    get().calculateTotals();
+  } catch (error) {
+    set({ loading: false }); // ✅ always stop loading on error
+    if (error.response?.status === 401) {
+      toast.error("Please log in to add items to your cart.");
+    } else {
+      toast.error(error.response?.data?.message || "An error occurred");
     }
-  },
+  }
+},
+
   removeFromCart: async (productId) => {
     await axios.delete(`/cart`, { data: { productId } });
     set((prevState) => ({
