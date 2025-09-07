@@ -81,7 +81,6 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: allowedOrigins,
-    methods: "GET,POST,PUT,DELETE,PATCH",
     credentials: true,
   })
 );
@@ -89,10 +88,7 @@ app.use(
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [
-      "https://core-2-jjm-manufacturing-rgjr.vercel.app",
-      "http://localhost:5173", // Keep this for local development
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
