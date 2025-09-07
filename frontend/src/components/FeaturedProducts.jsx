@@ -62,12 +62,13 @@ const FeaturedProducts = ({ featuredProducts = [] }) => {
 												₱{product.price.toFixed(2)}
 											</p>
 											<button
+												disabled={!user}
 												onClick={() => addToCart(product)}
-												className='w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded transition-colors duration-300 
-												flex items-center justify-center mt-auto'
-											>
+												className={`w-full py-2 px-4 rounded mt-auto flex items-center justify-center 
+													${!user ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-500 text-white"}`}
+												>
 												<ShoppingCart className='w-5 h-5 mr-2' />
-												Add to Cart
+												{user ? "Add to Cart" : "Login to Add"}
 											</button>
 										</div>
 									</div>
