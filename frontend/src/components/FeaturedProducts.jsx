@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCartStore } from "../stores/useCartStore";
+import useUserStore from "../stores/useUserStore";
 
 const FeaturedProducts = ({ featuredProducts = [] }) => {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [itemsPerPage, setItemsPerPage] = useState(4);
 
 	const { addToCart } = useCartStore();
-	const { user } = useAuthStore();
+	const { user } = useUserStore();
 
 	useEffect(() => {
 		const handleResize = () => {
