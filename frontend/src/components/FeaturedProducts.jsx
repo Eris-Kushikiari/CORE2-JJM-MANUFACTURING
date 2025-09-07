@@ -7,6 +7,7 @@ const FeaturedProducts = ({ featuredProducts = [] }) => {
 	const [itemsPerPage, setItemsPerPage] = useState(4);
 
 	const { addToCart } = useCartStore();
+	const { user } = useAuthStore();
 
 	useEffect(() => {
 		const handleResize = () => {
